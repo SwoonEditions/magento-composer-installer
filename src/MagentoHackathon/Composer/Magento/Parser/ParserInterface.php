@@ -1,8 +1,12 @@
 <?php
 
-namespace MagentoHackathon\Composer\Magento;
+namespace MagentoHackathon\Composer\Magento\Parser;
 
-interface Parser
+/**
+ * Interface ParserInterface
+ * @package MagentoHackathon\Composer\Magento\Parser
+ */
+interface ParserInterface
 {
     /**
      * Return the mappings in an array:

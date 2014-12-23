@@ -46,13 +46,11 @@
         "phpunit/phpunit":"*",
         "phpunit/phpunit-mock-objects": "dev-master",
         "squizlabs/php_codesniffer": "1.4.7",
-        "firegento/phpcs": "1.1.0",
         "composer/composer":"*@dev",
         "symfony/process":"*",
         "mikey179/vfsStream":"*"
     },
     "suggest":{
-        "theseer/autoload": "~1.14",
         "zetacomponents/console-tools": "dev-master",
         "colinmollenhour/modman": "*",
         "magento-hackathon/composer-command-integrator":"*"
@@ -75,7 +73,6 @@
     },
     "test_version":"999.0.0",
     "extra":{
-        "composer-command-registry": [ "MagentoHackathon\\Composer\\Magento\\Command\\DeployCommand" ],
         "class":"MagentoHackathon\\Composer\\Magento\\Plugin"
     }
 }

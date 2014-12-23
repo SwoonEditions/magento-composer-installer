@@ -33,8 +33,6 @@ class ProjectConfig
 
     const AUTO_APPEND_GITIGNORE_KEY = 'auto-append-gitignore';
 
-    const PATH_MAPPINGS_TRANSLATIONS_KEY = 'path-mapping-translations';
-
     const DISABLE_CORE_INSTALLER = 'disable-core-installer';
 
     // Default Values
