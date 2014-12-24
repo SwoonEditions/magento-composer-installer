@@ -161,116 +161,45 @@ class ModuleInstallerTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    /*
-     * Test that path mapping translation code doesn't have any effect when no
-     * translations are specified.
+    /**
+     * joinFilePathsProvider
+     *
+     * @return array
      */
-
-    protected function createPathMappingTranslationMock()
+    public function joinFilePathsProvider()
     {
-        return $this->createPackageMock(
-            array(
-                'map' => array(
-                    array('src/app/etc/modules/Example_Name.xml',   'app/etc/modules/Example_Name.xml'),
-                    array('src/app/code/community/Example/Name',    'app/code/community/Example/Name'),
-                    array('src/skin',                               'skin/frontend/default/default/examplename'),
-                    array('src/js',                                 'js/examplename'),
-                    array('src/media/images',                       'media/examplename_images'),
-                    array('src2/skin',                              './skin/frontend/default/default/examplename'),
-                    array('src2/js',                                './js/examplename'),
-                    array('src2/media/images',                      './media/examplename_images'),
-                )
-            )
+        $ds = DIRECTORY_SEPARATOR;
+        return array(
+            array('app/etc/', '/modules', 'app'.$ds.'etc'.$ds.'modules'),
+            array('app/etc/', 'modules', 'app'.$ds.'etc'.$ds.'modules'),
+            array('app/etc', 'modules', 'app'.$ds.'etc'.$ds.'modules'),
+            array('/app/etc', '/modules', $ds.'app'.$ds.'etc'.$ds.'modules'),
+            array('/app/etc/', '/modules', $ds.'app'.$ds.'etc'.$ds.'modules'),
+            array('/app/etc', 'modules/', $ds.'app'.$ds.'etc'.$ds.'modules'.$ds),
+            array('app\\etc\\', '\\modules', 'app'.$ds.'etc'.$ds.'modules'),
+            array('app\\etc\\', 'modules', 'app'.$ds.'etc'.$ds.'modules'),
+            array('app\\etc', 'modules', 'app'.$ds.'etc'.$ds.'modules'),
+            array('\\app\\etc', '\\modules', $ds.'app'.$ds.'etc'.$ds.'modules'),
+            array('\\app\\etc\\', '\\modules', $ds.'app'.$ds.'etc'.$ds.'modules'),
+            array('\\app\\etc', 'modules\\', $ds.'app'.$ds.'etc'.$ds.'modules'.$ds)
         );
     }
 
     /**
-     * 
+     * testJoinFilePaths
+     *
+     * @param $path1
+     * @param $path2
+     * @param $expected
+     *
+     * @return void
+     *
+     * @dataProvider joinFilePathsProvider
+     * @covers MagentoHackathon\Composer\Magento\Installer\ModuleInstaller::joinFilePaths
      */
-    public function testEtcPathMappingTranslation()
+    public function testJoinFilePaths($path1, $path2, $expected)
     {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src/app/etc/modules/Example_Name.xml', 'app/etc/modules/Example_Name.xml'), $mappings);
+        $this->assertEquals($expected, $this->object->joinFilePath($path1, $path2));
     }
-
-    /**
-     * 
-     */
-    public function testCodePathMappingTranslation()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src/app/code/community/Example/Name', 'app/code/community/Example/Name'), $mappings);
-    }
-
-    /**
-     * 
-     */
-    public function testJSPathMappingTranslation()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src/js', 'js/examplename'), $mappings);
-    }
-
-    /**
-     * 
-     */
-    public function testSkinPathMappingTranslation()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src/skin', 'skin/frontend/default/default/examplename'), $mappings);
-    }
-
-    /**
-     * 
-     */
-    public function testMediaPathMappingTranslation()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src/media/images', 'media/examplename_images'), $mappings);
-    }
-
-    /**
-     * 
-     */
-    public function testJSPathMappingTranslation2()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src2/js', './js/examplename'),$mappings);
-    }
-
-    /**
-     * 
-     */
-    public function testSkinPathMappingTranslation2()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src2/skin', './skin/frontend/default/default/examplename'), $mappings);
-    }
-
-    /**
-     * 
-     */
-    public function testMediaPathMappingTranslation2()
-    {
-        $package = $this->createPathMappingTranslationMock();
-        $mappings = $this->object->getParser($package)->getMappings();
-
-        $this->assertContains(array('src2/media/images', './media/examplename_images'), $mappings);
-    }
-
 }
 
