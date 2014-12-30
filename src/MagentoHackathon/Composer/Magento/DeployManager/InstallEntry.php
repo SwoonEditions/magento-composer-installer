@@ -6,10 +6,10 @@
  * 
  */
 
-namespace MagentoHackathon\Composer\Magento\Deploy\Manager;
+namespace MagentoHackathon\Composer\Magento\DeployManager;
 
-
-class Entry {
+class InstallEntry implements EntryInterface
+{
 
     protected $packageName;
 
@@ -49,6 +49,14 @@ class Entry {
     {
         return $this->deployStrategy;
     }
-    
-    
+
+    public function execute()
+    {
+        $this->deployStrategy->deploy();
+    }
+
+    public function getDeployedFiles()
+    {
+        return $this->deployStrategy->getDeployedFiles();
+    }
 }

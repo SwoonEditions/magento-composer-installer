@@ -9,12 +9,20 @@
 namespace MagentoHackathon\Composer\Magento;
 
 use Composer\IO\IOInterface;
+use Composer\Repository\InstalledRepositoryInterface;
 use MagentoHackathon\Composer\Magento\Deploy\Manager\Entry;
+use MagentoHackathon\Composer\Magento\DeployManager\InstallEntry;
+use MagentoHackathon\Composer\Magento\DeployManager\RemoveEntry;
 use MagentoHackathon\Composer\Magento\Deploystrategy\Copy;
+use MagentoHackathon\Composer\Magento\Deploystrategy\PackageRemover;
 use MagentoHackathon\Composer\Magento\Event\EventManager;
 use MagentoHackathon\Composer\Magento\Event\PackageDeployEvent;
+use MagentoHackathon\Composer\Magento\Repository\InstalledFilesRepositoryInterface;
+use MagentoHackathon\Composer\Magento\Repository\InstalledPackageMappingsFilesystemRepository;
+use MagentoHackathon\Composer\Magento\Repository\InstalledPackageMappingsRepositoryInterface;
 
-class DeployManager {
+class DeployManager
+{
 
     const SORT_PRIORITY_KEY = 'magento-deploy-sort-priority';
 
@@ -41,11 +49,32 @@ class DeployManager {
     protected $eventManager;
 
     /**
-     * @param EventManager $eventManager
+     * @var InstalledFilesRepositoryInterface
      */
-    public function __construct(EventManager $eventManager)
-    {
+    protected $repository;
+
+    protected $installs = array();
+
+    protected $unInstalls = array();
+
+    /**
+     * @var PackageRemover
+     */
+    protected  $packageRemover;
+
+    /**
+     * @param EventManager $eventManager
+     * @param InstalledFilesRepositoryInterface $repository
+     * @param PackageRemover $packageRemover
+     */
+    public function __construct(
+        EventManager $eventManager,
+        InstalledFilesRepositoryInterface $repository,
+        PackageRemover $packageRemover
+    ) {
         $this->eventManager = $eventManager;
+        $this->repository   = $repository;
+        $this->packageRemover = $packageRemover;
     }
 
     /**
@@ -97,16 +126,47 @@ class DeployManager {
     }
 
     /**
-     * Deploy all the queued packages
+     * Run all uninstalls and installs
      */
-    public function doDeploy()
+    public function execute()
     {
-        $this->sortPackages();
-        /** @var Entry $package */
-        foreach($this->packages as $package) {
-            $this->eventManager->dispatch(new PackageDeployEvent('pre-package-deploy', $package));
-            $package->getDeployStrategy()->deploy();
-            $this->eventManager->dispatch(new PackageDeployEvent('post-package-deploy', $package));
+        $this->unInstall();
+        $this->install();
+    }
+
+    /**
+     * Install all the queued packages
+     */
+    public function install()
+    {
+        /** @var InstallEntry $entry */
+        foreach ($this->installs as $entry) {
+            $this->eventManager->dispatch(new PackageDeployEvent('pre-package-install', $entry));
+            $entry->getDeployStrategy()->deploy();
+
+            $this->repository->add(
+                $entry->getPackageName(),
+                $entry->getDeployStrategy()->getDeployedFiles()
+            );
+
+            $this->eventManager->dispatch(new PackageDeployEvent('pre-package-install', $entry));
+        }
+    }
+
+    /**
+     * Uninstall all the queued packages
+     */
+    public function unInstall()
+    {
+        /** @var RemoveEntry $entry */
+        foreach ($this->unInstalls as $entry) {
+            $this->eventManager->dispatch(new PackageDeployEvent('pre-package-uninstall', $entry));
+
+            $installedFiles = $this->repository->getByPackage($entry->getPackageName());
+            $this->packageRemover->remove($installedFiles);
+            $this->repository->removeByPackage($entry->getPackageName());
+
+            $this->eventManager->dispatch(new PackageDeployEvent('post-package-uninstall', $entry));
         }
     }
 }

@@ -4,6 +4,7 @@ namespace MagentoHackathon\Composer\Magento\Event;
 
 use Composer\EventDispatcher\Event;
 use MagentoHackathon\Composer\Magento\Deploy\Manager\Entry;
+use MagentoHackathon\Composer\Magento\DeployManager\EntryInterface;
 
 /**
  * Class PackageDeployEvent
@@ -19,9 +20,9 @@ class PackageDeployEvent extends Event
 
     /**
      * @param string $name
-     * @param Entry  $deployEntry
+     * @param EntryInterface $deployEntry
      */
-    public function __construct($name, Entry $deployEntry)
+    public function __construct($name, EntryInterface $deployEntry)
     {
         parent::__construct($name);
         $this->deployEntry = $deployEntry;
