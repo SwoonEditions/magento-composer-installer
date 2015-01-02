@@ -361,6 +361,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
      */
     public function getPackageInstallPath(PackageInterface $package)
     {
-        return sprintf('%s/%s', $this->composer->getConfig()->get('vendor-dir'), $package->getPrettyName());
+        $vendorDir = realpath(rtrim($this->composer->getConfig()->get('vendor-dir'), '/'));
+        return sprintf('%s/%s', $vendorDir, $package->getPrettyName());
     }
 }
