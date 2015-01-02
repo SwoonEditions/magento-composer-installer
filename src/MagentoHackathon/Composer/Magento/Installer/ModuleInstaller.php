@@ -7,7 +7,7 @@ namespace MagentoHackathon\Composer\Magento\Installer;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
-use MagentoHackathon\Composer\Magento\Parser\ParserFactoryInterface;
+use MagentoHackathon\Composer\Magento\Factory\ParserFactoryInterface;
 
 /**
  * Class ModuleInstaller

@@ -42,10 +42,10 @@ class Factory
             default:
                 $impl = new Symlink($sourceDir, $targetDir);
         }
-        
+
         return $impl;
     }
-    
+
     public static function getDeployStrategyObjectByProjectConfigAndPackage(
         ProjectConfig $projectConfig,
         PackageInterface $package,
@@ -74,7 +74,7 @@ class Factory
      * @param ProjectConfig $projectConfig
      * @param               $package
      * @param               $packageDir
-     * 
+     *
      * @return Parser
      *
      * @throws \ErrorException
@@ -124,18 +124,18 @@ class Factory
             throw new \ErrorException('Unable to find deploy strategy for module: no known mapping');
         }
     }
-    
+
     public static function getDeployManagerEntry(ProjectConfig $projectConfig, $package, $vendorDir)
     {
         $entry = new Entry();
         $entry->setPackageName($package->getName());
-        
+
         $strategy = self::getDeployStrategyObjectByProjectConfigAndPackage($projectConfig, $package, $vendorDir);
 
-        
-        
+
+
         $entry->setDeployStrategy($strategy);
-        
+
         return $entry;
     }
 }

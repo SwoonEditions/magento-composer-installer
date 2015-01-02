@@ -1,9 +1,8 @@
 <?php
 
-namespace MagentoHackathon\Composer\Magento\Parser;
+namespace MagentoHackathon\Composer\Magento\Factory;
 
 use Composer\Package\PackageInterface;
-use Composer\Package\RootPackageInterface;
 
 /**
  * Interface ParserFactoryInterface
@@ -15,9 +14,8 @@ interface ParserFactoryInterface
 
     /**
      * @param PackageInterface $package
-     * @param RootPackageInterface $rootPackage
      * @param string $sourceDir
      * @return Parser
      */
-    public function make(PackageInterface $package, RootPackageInterface $rootPackage, $sourceDir);
+    public function make(PackageInterface $package, $sourceDir);
 }

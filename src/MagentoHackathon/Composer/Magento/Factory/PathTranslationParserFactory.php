@@ -1,9 +1,9 @@
 <?php
 
-namespace MagentoHackathon\Composer\Magento\Parser;
+namespace MagentoHackathon\Composer\Magento\Factory;
 
 use Composer\Package\PackageInterface;
-use Composer\Package\RootPackageInterface;
+use MagentoHackathon\Composer\Magento\Parser\PathTranslationParser;
 use MagentoHackathon\Composer\Magento\ProjectConfig;
 
 /**
@@ -34,14 +34,13 @@ class PathTranslationParserFactory implements ParserFactoryInterface
 
     /**
      * @param PackageInterface $package
-     * @param RootPackageInterface $rootPackage
      * @param string $sourceDir
      * @return Parser
      * @throws \ErrorException
      */
-    public function make(PackageInterface $package, RootPackageInterface $rootPackage, $sourceDir)
+    public function make(PackageInterface $package, $sourceDir)
     {
-        $parser = $this->parserFactory->make($package, $rootPackage, $sourceDir);
+        $parser = $this->parserFactory->make($package, $sourceDir);
 
         if ($this->config->hasPathMappingTranslations()) {
             $translations = $this->config->getPathMappingTranslations();

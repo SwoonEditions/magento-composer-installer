@@ -16,8 +16,10 @@ use MagentoHackathon\Composer\Magento\Event\PackageDeployEvent;
 use MagentoHackathon\Composer\Magento\Installer\CoreInstaller;
 use MagentoHackathon\Composer\Magento\Installer\MagentoInstallerAbstract;
 use MagentoHackathon\Composer\Magento\Installer\ModuleInstaller;
-use MagentoHackathon\Composer\Magento\Parser\ParserFactory;
-use MagentoHackathon\Composer\Magento\Parser\PathTranslationParserFactory;
+use MagentoHackathon\Composer\Magento\Factory\ParserFactory;
+use MagentoHackathon\Composer\Magento\Factory\PathTranslationParserFactory;
+use MagentoHackathon\Composer\Magento\Factory\EntryFactory;
+use MagentoHackathon\Composer\Magento\Factory\DeploystrategyFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Composer\Composer;
@@ -63,6 +65,11 @@ class Plugin implements PluginInterface, EventSubscriberInterface
      * @var Filesystem
      */
     protected $filesystem;
+
+    /**
+     * @var EntryFactory
+     */
+    protected $entryFactory;
 
     /**
      * init the DeployManager
@@ -133,17 +140,15 @@ class Plugin implements PluginInterface, EventSubscriberInterface
 
         $this->filesystem = new Filesystem();
         $this->config = new ProjectConfig($composer->getPackage()->getExtra());
+        $this->entryFactory = new EntryFactory(
+            $this->config,
+            new DeploystrategyFactory($this->config),
+            new PathTranslationParserFactory(new ParserFactory($this->config), $this->config)
+        );
 
         $this->initDeployManager($composer, $io, $this->getEventManager());
 
         $this->writeDebug('activate magento plugin');
-
-        $moduleInstaller = $this->initMagentoInstaller(
-            new ModuleInstaller($io, $composer),
-            $this->deployManager
-        );
-
-        $composer->getInstallationManager()->addInstaller($moduleInstaller);
     }
 
     /**
@@ -194,11 +199,8 @@ class Plugin implements PluginInterface, EventSubscriberInterface
         foreach ($packages as $package) {
             if ($package->getType() == 'magento-module' && !isset($addedPackageNames[$package->getName()])) {
                 $this->writeDebug('add missing package '.$package->getName());
-                $this->deployManager->addPackage(Factory::getDeployManagerEntry(
-                    $this->config,
-                    $package,
-                    realpath(rtrim($this->composer->getConfig()->get('vendor-dir'), '/'))
-                ));
+                $entry = $this->entryFactory->make($package, $this->getPackageInstallPath($package));
+                $this->deployManager->addPackage($entry);
             }
         }
 
@@ -351,5 +353,14 @@ class Plugin implements PluginInterface, EventSubscriberInterface
     public function getEventManager()
     {
         return new EventManager;
+    }
+
+    /**
+     * @param PackageInterface $package
+     * @return string
+     */
+    public function getPackageInstallPath(PackageInterface $package)
+    {
+        return sprintf('%s/%s', $this->composer->getConfig()->get('vendor-dir'), $package->getPrettyName());
     }
 }

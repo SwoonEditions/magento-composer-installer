@@ -6,8 +6,8 @@ use Composer\Test\TestCase;
 use Composer\Composer;
 use Composer\Config;
 use MagentoHackathon\Composer\Magento\Installer\ModuleInstaller;
-use MagentoHackathon\Composer\Magento\Parser\ParserFactory;
-use MagentoHackathon\Composer\Magento\Parser\PathTranslationParserFactory;
+use MagentoHackathon\Composer\Magento\Factory\ParserFactory;
+use MagentoHackathon\Composer\Magento\Factory\PathTranslationParserFactory;
 
 class ModuleInstallerTest extends \PHPUnit_Framework_TestCase
 {
@@ -55,14 +55,15 @@ class ModuleInstallerTest extends \PHPUnit_Framework_TestCase
         ));
 
         $this->dm = $this->getMockBuilder('Composer\Downloader\DownloadManager')
-               ->disableOriginalConstructor()
-               ->getMock();
+            ->disableOriginalConstructor()
+            ->getMock();
         $this->composer->setDownloadManager($this->dm);
 
         $this->repository = $this->getMock('Composer\Repository\InstalledRepositoryInterface');
         $this->io = $this->getMock('Composer\IO\IOInterface');
 
-        $parserFactory = new PathTranslationParserFactory(new ParserFactory(), new ProjectConfig(array()));
+        $projectConfig = new ProjectConfig(array());
+        $parserFactory = new PathTranslationParserFactory(new ParserFactory($projectConfig), $projectConfig);
         $this->object = new ModuleInstaller($this->io, $this->composer, $parserFactory);
     }
 
@@ -77,14 +78,14 @@ class ModuleInstallerTest extends \PHPUnit_Framework_TestCase
     {
         //$package= $this->getMockBuilder('Composer\Package\RootPackageInterface')
         $package = $this->getMockBuilder('Composer\Package\RootPackage')
-                ->setConstructorArgs(array(md5(rand()), '1.0.0.0', '1.0.0'))
-                ->getMock();
+            ->setConstructorArgs(array(md5(rand()), '1.0.0.0', '1.0.0'))
+            ->getMock();
         $extraData = array_merge(array('magento-root-dir' => $this->magentoDir), $extra);
 
         $package->expects($this->any())
-                ->method('getExtra')
-                ->will($this->returnValue($extraData));
-        
+            ->method('getExtra')
+            ->will($this->returnValue($extraData));
+
         $package->expects($this->any())
             ->method('getName')
             ->will($this->returnValue($name));
@@ -101,26 +102,27 @@ class ModuleInstallerTest extends \PHPUnit_Framework_TestCase
         $extra = array_merge($composerExtra, $extra);
         $package = $this->createPackageMock($extra,$packageName);
         $this->composer->setPackage($package);
-        $parserFactory = new PathTranslationParserFactory(new ParserFactory(), new ProjectConfig(array()));
+        $projectConfig = new ProjectConfig($extra);
+        $parserFactory = new PathTranslationParserFactory(new ParserFactory($projectConfig), $projectConfig);
         $installer = new ModuleInstaller($this->io, $this->composer, $parserFactory);
         $this->assertInstanceOf($expectedClass, $installer->getDeployStrategy($package));
     }
 
     /**
-     * 
+     *
      */
     public function testSupports()
     {
         $this->assertTrue($this->object->supports('magento-module'));
     }
-    
+
     public function deployMethodProvider()
     {
         $deployOverwrite = array(
             'example/test2' => 'symlink',
             'example/test3' => 'none',
         );
-        
+
         return array(
             array(
                 'method' => 'copy',

@@ -1,37 +1,49 @@
 <?php
 
-namespace MagentoHackathon\Composer\Magento\Parser;
+namespace MagentoHackathon\Composer\Magento\Factory;
 
 use Composer\Package\PackageInterface;
-use Composer\Package\RootPackageInterface;
+use MagentoHackathon\Composer\Magento\Parser\MapParser;
+use MagentoHackathon\Composer\Magento\Parser\ModmanParser;
+use MagentoHackathon\Composer\Magento\Parser\PackageXmlParser;
+use MagentoHackathon\Composer\Magento\Parser\Parser;
+use MagentoHackathon\Composer\Magento\ProjectConfig;
 
 /**
  * Class ParserFactory
- * @package MagentoHackathon\Composer\Magento\Parser
+ * @package MagentoHackathon\Composer\Magento\Factory
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
  */
 class ParserFactory implements ParserFactoryInterface
 {
+
+    /**
+     * @var ProjectConfig
+     */
+    protected $config;
+
+    /**
+     */
+    public function __construct(ProjectConfig $config)
+    {
+        $this->config = $config;
+    }
+
     /**
      * @param PackageInterface $package
-     * @param RootPackageInterface $rootPackage
      * @param string $sourceDir
      * @return Parser
      * @throws \ErrorException
      */
-    public function make(PackageInterface $package, RootPackageInterface $rootPackage, $sourceDir)
+    public function make(PackageInterface $package, $sourceDir)
     {
-        $rootExtra = $rootPackage->getExtra();
-        if (isset($rootExtra['magento-map-overwrite'])) {
-            $moduleSpecificMap = array_change_key_case($rootExtra['magento-map-overwrite'], CASE_LOWER);
-            if (isset($moduleSpecificMap[$package->getName()])) {
-                $map = $moduleSpecificMap[$package->getName()];
-                return new MapParser($map);
-            }
+        $moduleSpecificMap = $this->config->getMagentoMapOverwrite();
+        if (isset($moduleSpecificMap[$package->getName()])) {
+            $map = $moduleSpecificMap[$package->getName()];
+            return new MapParser($map);
         }
 
         $extra = $package->getExtra();
-
         if (isset($extra['map'])) {
             return new MapParser($extra['map']);
         }

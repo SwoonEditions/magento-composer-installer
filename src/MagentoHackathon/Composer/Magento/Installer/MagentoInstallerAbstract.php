@@ -8,9 +8,6 @@ namespace MagentoHackathon\Composer\Magento\Installer;
 use Composer\Repository\InstalledRepositoryInterface;
 use Composer\IO\IOInterface;
 use Composer\Composer;
-use Composer\Factory;
-use Composer\Json\JsonFile;
-use Composer\Json\JsonManipulator;
 use Composer\Installer\LibraryInstaller;
 use Composer\Installer\InstallerInterface;
 use Composer\Package\PackageInterface;
@@ -21,11 +18,12 @@ use MagentoHackathon\Composer\Magento\Deploystrategy\Copy;
 use MagentoHackathon\Composer\Magento\Deploystrategy\Link;
 use MagentoHackathon\Composer\Magento\Deploystrategy\None;
 use MagentoHackathon\Composer\Magento\Deploystrategy\Symlink;
+use MagentoHackathon\Composer\Magento\Factory\DeploystrategyFactory;
 use MagentoHackathon\Composer\Magento\MapParser;
 use MagentoHackathon\Composer\Magento\ModmanParser;
 use MagentoHackathon\Composer\Magento\PackageXmlParser;
 use MagentoHackathon\Composer\Magento\Parser;
-use MagentoHackathon\Composer\Magento\Parser\ParserFactoryInterface;
+use MagentoHackathon\Composer\Magento\Factory\ParserFactoryInterface;
 use MagentoHackathon\Composer\Magento\ProjectConfig;
 
 /**
@@ -258,9 +256,9 @@ abstract class MagentoInstallerAbstract extends LibraryInstaller implements Inst
             }
         }
 
-        $targetDir = $this->getTargetDir();
-        $sourceDir = $this->getSourceDir($package);
-        $impl = \MagentoHackathon\Composer\Magento\Factory::getDeployStrategyObject($strategy, $sourceDir, $targetDir);
+        $strategyFactory = new DeploystrategyFactory($this->config);
+        $impl = $strategyFactory->make($package, $this->composer->getConfig()->get('vendor-dir'));
+
         // Inject isForced setting from extra config
         $impl->setIsForced($this->isForced);
         $impl->setIgnoredMappings($this->getModuleSpecificDeployIgnores($package));
@@ -444,10 +442,13 @@ abstract class MagentoInstallerAbstract extends LibraryInstaller implements Inst
     }
 
     /**
-     * join 2 paths
+     * joinFilePath
      *
-     * @param        $path1
-     * @param        $path2
+     * joins 2 Filepaths and replaces the Directory Separators
+     * with the Systems Directory Separator
+     *
+     * @param $path1
+     * @param $path2
      * @param        $delimiter
      * @param bool   $prependDelimiter
      * @param string $additionalPrefix
@@ -457,28 +458,44 @@ abstract class MagentoInstallerAbstract extends LibraryInstaller implements Inst
      *
      * @return string
      */
-    protected function joinPath($path1, $path2, $delimiter, $prependDelimiter = false, $additionalPrefix = '')
+    public function joinFilePath($path1, $path2)
     {
-        $prefix = $additionalPrefix . $prependDelimiter ? $delimiter : '';
+        $prefix = $this->startsWithDs($path1) ? DIRECTORY_SEPARATOR : '';
+        $suffix = $this->endsWithDs($path2) ? DIRECTORY_SEPARATOR : '';
 
-        return $prefix . join(
-            $delimiter,
-            array(
-                explode($path1, $delimiter),
-                explode($path2, $delimiter)
+        return $prefix . implode(
+            DIRECTORY_SEPARATOR,
+            array_merge(
+                preg_split('/\\\|\//', $path1, null, PREG_SPLIT_NO_EMPTY),
+                preg_split('/\\\|\//', $path2, null, PREG_SPLIT_NO_EMPTY)
             )
-        );
+        ) . $suffix;
     }
 
     /**
-     * @param $path1
-     * @param $path2
+     * startsWithDs
      *
-     * @return string
+     * @param $path
+     *
+     * @return bool
      */
-    protected function joinFilePath($path1, $path2)
+    protected function startsWithDs($path)
     {
-        return $this->joinPath($path1, $path2, DIRECTORY_SEPARATOR, true);
+        return strrpos($path, '/', -strlen($path)) !== FALSE
+            || strrpos($path, '\\', -strlen($path)) !== FALSE;
+    }
+
+    /**
+     * endsWithDs
+     *
+     * @param $path
+     *
+     * @return bool
+     */
+    protected function endsWithDs($path)
+    {
+        return strpos($path, '/', strlen($path) - 1) !== FALSE
+            || strpos($path, '\\', strlen($path) - 1) !== FALSE;
     }
 
     /**
