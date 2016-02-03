@@ -1,5 +1,5 @@
 {
-    "name":"magento-hackathon/magento-composer-installer",
+    "name":"swooneditions/magento-composer-installer",
     "description":"Composer installer for Magento modules",
     "keywords":[ "composer-installer", "magento"],
     "minimum-stability":"stable",
