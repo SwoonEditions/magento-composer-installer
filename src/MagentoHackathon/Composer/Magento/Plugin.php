@@ -9,7 +9,6 @@
 namespace MagentoHackathon\Composer\Magento;
 
 use Composer\Config;
-use Composer\Installer;
 use Composer\Script\CommandEvent;
 use MagentoHackathon\Composer\Magento\Event\EventManager;
 use MagentoHackathon\Composer\Magento\Event\PackageDeployEvent;
